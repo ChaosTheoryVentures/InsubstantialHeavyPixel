@@ -1,0 +1,9 @@
+- OS: Linux-6.2.16-x86_64-with-glibc2.40 # 1-NixOS SMP PREEMPT_DYNAMIC Tue Jan  1 00:00:00 UTC 1980
+- Python: 3.11.10
+- Stable-Baselines3: 2.5.0
+- PyTorch: 2.6.0+cpu
+- GPU Enabled: False
+- Numpy: 2.2.2
+- Cloudpickle: 3.1.1
+- Gymnasium: 1.0.0
+- OpenAI Gym: 0.26.2
