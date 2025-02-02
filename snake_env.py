@@ -1,88 +1,95 @@
-import gymnasium as gym
-import numpy as np
-from gymnasium import spaces
+# snake_env.py
+import random
 
-class SnakeBattleEnv(gym.Env):
-    """Custom environment where two AI snakes compete for food."""
+class SnakeEnv:
     def __init__(self, grid_size=15):
-        super(SnakeBattleEnv, self).__init__()
         self.grid_size = grid_size
-
-        # Action Space: 4 Possible Moves for Each Snake
-        self.action_space = spaces.MultiDiscrete([4, 4])  # [Snake1 Action, Snake2 Action]
-
-        # Observation Space: 3D Grid Representation
-        self.observation_space = spaces.Box(low=0, high=1, shape=(grid_size, grid_size, 3), dtype=np.float32)
-
         self.reset()
 
-    def reset(self, seed=None, options=None):
-        """Resets the game and returns the initial observation."""
-        self.snake1 = [(5, 5)]
-        self.snake2 = [(10, 10)]
+    def reset(self):
+        # Initialize snake starting positions
+        self.snake1 = [(2, 2)]
+        self.snake2 = [(self.grid_size - 3, self.grid_size - 3)]
         self.food = self._spawn_food()
         self.done = False
-        return self._get_observation(), {}
+        return self._get_obs()
+
+    def _get_obs(self):
+        # In this simplified example, the observation is a dictionary.
+        obs = {
+            'snake1': self.snake1,
+            'snake2': self.snake2,
+            'food': self.food
+        }
+        return obs
 
     def step(self, actions):
-        """Executes actions for both snakes and updates the game state."""
-        reward1, reward2 = 0, 0
+        # actions: list of two integers (0: up, 1: right, 2: down, 3: left)
+        action1, action2 = actions
+        self._move_snake(1, action1)
+        self._move_snake(2, action2)
+        self._check_food(1)
+        self._check_food(2)
+        self.done = self._check_collisions()
+        reward = 0  # Rewards are not used for visualization.
+        obs = self._get_obs()
+        return obs, reward, self.done, {}
 
-        # Move Snakes
-        self.snake1.insert(0, self._move(self.snake1[0], actions[0]))
-        self.snake2.insert(0, self._move(self.snake2[0], actions[1]))
+    def _move_snake(self, snake_number, action):
+        if snake_number == 1:
+            head = self.snake1[0]
+            new_head = self._get_new_head(head, action)
+            self.snake1.insert(0, new_head)
+            self.snake1.pop()  # Remove tail
+        elif snake_number == 2:
+            head = self.snake2[0]
+            new_head = self._get_new_head(head, action)
+            self.snake2.insert(0, new_head)
+            self.snake2.pop()  # Remove tail
 
-        # Check for food
-        if self.snake1[0] == self.food:
-            reward1 += 10
-            self.food = self._spawn_food()
-        else:
-            self.snake1.pop()
+    def _get_new_head(self, head, action):
+        x, y = head
+        if action == 0:    # up
+            y -= 1
+        elif action == 1:  # right
+            x += 1
+        elif action == 2:  # down
+            y += 1
+        elif action == 3:  # left
+            x -= 1
 
-        if self.snake2[0] == self.food:
-            reward2 += 10
-            self.food = self._spawn_food()
-        else:
-            self.snake2.pop()
-
-        # Check collisions
-        if self._is_collision(self.snake1[0], self.snake1) or self._is_collision(self.snake1[0], self.snake2):
-            reward1 -= 10
-            self.done = True
-
-        if self._is_collision(self.snake2[0], self.snake2) or self._is_collision(self.snake2[0], self.snake1):
-            reward2 -= 10
-            self.done = True
-
-        return self._get_observation(), reward1, self.done, False, {}
-
-    def _move(self, position, action):
-        """Moves the snake based on the action (0=UP, 1=RIGHT, 2=DOWN, 3=LEFT)."""
-        x, y = position
-        if action == 0 and y > 0: y -= 1
-        elif action == 1 and x < self.grid_size - 1: x += 1
-        elif action == 2 and y < self.grid_size - 1: y += 1
-        elif action == 3 and x > 0: x -= 1
+        # Clamp the new head within grid bounds
+        x = max(0, min(self.grid_size - 1, x))
+        y = max(0, min(self.grid_size - 1, y))
         return (x, y)
 
-    def _is_collision(self, position, snake):
-        """Checks if a snake collides with itself or the wall."""
-        x, y = position
-        return (x < 0 or y < 0 or x >= self.grid_size or y >= self.grid_size or position in snake[1:])
+    def _check_food(self, snake_number):
+        if snake_number == 1:
+            head = self.snake1[0]
+            if head == self.food:
+                # Grow snake1 by repeating the tail segment
+                self.snake1.append(self.snake1[-1])
+                self.food = self._spawn_food()
+        elif snake_number == 2:
+            head = self.snake2[0]
+            if head == self.food:
+                self.snake2.append(self.snake2[-1])
+                self.food = self._spawn_food()
 
     def _spawn_food(self):
-        """Generates a new food location ensuring it's not inside a snake."""
         while True:
-            food = (np.random.randint(0, self.grid_size), np.random.randint(0, self.grid_size))
+            food = (random.randint(0, self.grid_size - 1), random.randint(0, self.grid_size - 1))
             if food not in self.snake1 and food not in self.snake2:
                 return food
 
-    def _get_observation(self):
-        """Creates a 3D NumPy array representation of the grid."""
-        obs = np.zeros((self.grid_size, self.grid_size, 3), dtype=np.float32)
-        for x, y in self.snake1:
-            obs[y, x, 0] = 1  # Snake 1 in Red Channel
-        for x, y in self.snake2:
-            obs[y, x, 1] = 1  # Snake 2 in Green Channel
-        obs[self.food[1], self.food[0], 2] = 1  # Food in Blue Channel
-        return obs
+    def _check_collisions(self):
+        # End the game if the snakes' heads collide or if a snake collides with its own body or the other snake.
+        head1 = self.snake1[0]
+        head2 = self.snake2[0]
+        if head1 == head2:
+            return True
+        if head1 in self.snake1[1:] or head1 in self.snake2:
+            return True
+        if head2 in self.snake2[1:] or head2 in self.snake1:
+            return True
+        return False

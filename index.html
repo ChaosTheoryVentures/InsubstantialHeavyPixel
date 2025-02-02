@@ -1,49 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Snake Battle</title>
-    <style>
-        body { text-align: center; font-family: Arial, sans-serif; }
-        canvas { border: 2px solid black; }
-    </style>
+  <meta charset="UTF-8">
+  <title>AI Snake Battle</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>AI Snake Battle</h1>
-    <canvas id="gameCanvas" width="600" height="600"></canvas>
-
-    <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const gridSize = 40;  // 15x15 grid with 40px cells
-
-        async function updateGame() {
-            const response = await fetch("/game_state");
-            const data = await response.json();
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw Food (Red)
-            ctx.fillStyle = "red";
-            ctx.fillRect(data.food[1] * gridSize, data.food[0] * gridSize, gridSize, gridSize);
-
-            // Draw Snake 1 (Green)
-            ctx.fillStyle = "green";
-            data.snake1.forEach(segment => {
-                ctx.fillRect(segment[1] * gridSize, segment[0] * gridSize, gridSize, gridSize);
-            });
-
-            // Draw Snake 2 (Blue)
-            ctx.fillStyle = "blue";
-            data.snake2.forEach(segment => {
-                ctx.fillRect(segment[1] * gridSize, segment[0] * gridSize, gridSize, gridSize);
-            });
-
-            requestAnimationFrame(updateGame);
-        }
-
-        updateGame();
-    </script>
+  <h1>AI Snake Battle</h1>
+  <canvas id="gameCanvas" width="600" height="600"></canvas>
+  <script src="script.js"></script>
 </body>
 </html>

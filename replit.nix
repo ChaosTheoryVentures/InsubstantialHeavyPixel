@@ -1,16 +1,8 @@
-{pkgs}: {
+{ pkgs }: {
   deps = [
-    pkgs.portmidi
-    pkgs.pkg-config
-    pkgs.libpng
-    pkgs.libjpeg
-    pkgs.freetype
-    pkgs.fontconfig
-    pkgs.SDL2_ttf
-    pkgs.SDL2_mixer
-    pkgs.SDL2_image
-    pkgs.SDL2
-    pkgs.iana-etc
-    pkgs.unzip
+    pkgs.python39
+    pkgs.python39Packages.pip
+    pkgs.libGL
+    pkgs.libX11
   ];
 }
